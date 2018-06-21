@@ -13,10 +13,18 @@ import (
 )
 
 var (
-	code = flag.String("code", "", "ログインのURLのcode")
-	lat  = flag.String("lat", "", "緯度")
-	lon  = flag.String("lon", "", "経度")
-	gid  = flag.String("gid", "", "グループID")
+	now = time.Now()
+)
+var (
+	date   = flag.String("date", "", fmt.Sprintf("打刻日時 format: 2006-01-02, default: %s", now.Format("2006-01-02")))
+	ftime  = flag.String("time", "", fmt.Sprintf("打刻時間 format: 15:04, default: %s", now.Format("15:04")))
+	code   = flag.String("code", "", "ログインのURLに含まれるcode値")
+	lat    = flag.String("lat", "", "緯度")
+	lon    = flag.String("lon", "", "経度")
+	gid    = flag.String("gid", "", "グループID")
+	yakin  = flag.Bool("yakin", false, "夜勤モード default: false")
+	taikin = flag.Bool("taikin", false, "退勤フラグ default: false")
+	reason = flag.String("reason", "", "理由")
 )
 
 var (
@@ -88,7 +96,15 @@ func login(code string) (string, error) {
 }
 
 func dakoku(sid string, token string) (string, error) {
-	now := time.Now()
+	yakinPrm := []string{}
+	if *yakin {
+		yakinPrm = []string{"1"}
+	}
+
+	aditItemPrm := []string{"打刻"}
+	if *taikin {
+		aditItemPrm = []string{"退勤"}
+	}
 
 	q := url.Values{
 		"lon":         {*lon},
@@ -96,12 +112,12 @@ func dakoku(sid string, token string) (string, error) {
 		"year":        {now.Format("2006")},
 		"month":       {now.Format("1")},
 		"day":         {now.Format("2")},
-		"reason":      {},
-		"time":        {"21"},
+		"reason":      {*reason}, // 理由
+		"time":        {},        // ?
 		"group_id":    {*gid},
-		"position_id": {},
-		"adit_item":   {"打刻"},
-		"yakin":       {""},
+		"position_id": {},          // ?
+		"adit_item":   aditItemPrm, // 打刻, 退勤
+		"yakin":       yakinPrm,    // 1: 夜勤
 	}
 
 	method := http.MethodGet
