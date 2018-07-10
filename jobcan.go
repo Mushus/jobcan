@@ -58,7 +58,6 @@ Usage of %s:
 			if token == "" {
 				break
 			}
-			time.Sleep(10 * time.Second)
 		}
 		fmt.Println("打刻!")
 	} else {
